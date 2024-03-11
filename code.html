@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Testing System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      width: 500px;
+      margin: 0 auto;
+    }
+
+    .question {
+      margin-bottom: 20px;
+    }
+
+    .question h3 {
+      margin-bottom: 10px;
+    }
+
+    .options {
+      margin-left: 20px;
+    }
+
+    .submit-btn {
+      margin-top: 20px;
+    }
+
+    .results {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="start-page">
+      <label for="name">Name:</label>
+      <input type="text" id="name">
+      <button id="start-btn">Start</button>
+    </div>
+
+    <div id="question-page" style="display: none;">
+      <div class="question"></div>
+
+      <button id="next-btn">Next</button>
+      <button id="finish-btn" style="display: none;">Finish Testing</button>
+    </div>
+
+    <div id="results-page" style="display: none;">
+      <h2>Results</h2>
+      <p>Number of questions: <span id="total-questions"></span></p>
+      <p>Number of correct answers: <span id="correct-answers"></span></p>
+      <p>Number of incorrect answers: <span id="incorrect-answers"></span></p>
+      <p>Score: <span id="score"></span></p>
+      <div class="review" id="review"></div>
+      <button id="restart-btn">Go Again</button>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+  var currentQuestion = 0;
+  var correctAnswers = 0;
+  var incorrectAnswers = 0;
+
+  var questions = [
+    {
+      question: "What is the capital of Spain?",
+      options: ["Paris", "Madrid", "Berlin", "London"],
+      correctAnswer: [1]
+    },
+    {
+      question: "Which of the following are programming languages?",
+      options: ["HTML", "CSS", "JavaScript", "Photoshop"],
+      correctAnswer: [0, 1, 2]
+    },
+    {
+      question: "Who was in Paris?",
+      options: ["Fellas", "Friends", "Kanye West", "Barack Obama"],
+      correctAnswer: [2]
+    },
+    {
+      question: "What year was America founded?",
+      options: ["1492", "1902", "2023", "George Washington"],
+      correctAnswer: [0]
+    },
+    {
+      question: "what is 2+2",
+      options: ["4", "0+4", "2023", "C++"],
+      correctAnswer: [0,1]
+    },
+  ];
+
+  var totalQuestions = questions.length;
+  var userAnswers = Array(totalQuestions).fill([])
+  function showQuestion() {
+    var questionData = questions[currentQuestion];
+
+    var questionHtml = '<h3>Question ' + (currentQuestion + 1) + ': ' + questionData.question + '</h3>';
+    questionHtml += '<div class="options">';
+    for (var i = 0; i < questionData.options.length; i++) {
+      var option = questionData.options[i];
+      var inputType = questionData.correctAnswer.length > 1 ? 'checkbox' : 'radio';
+      questionHtml += '<input type="' + inputType + '" name="q' + (currentQuestion + 1) + '" value="' + i + '"> ' + option + '<br>';
+    }
+    questionHtml += '</div>';
+
+    $("#question-page .question").html(questionHtml);
+
+    if (currentQuestion === totalQuestions - 1) {
+      $("#next-btn").hide();
+      $("#finish-btn").show();
+    }
+
+    $("#question-page").show();
+  }
+
+  function showResults() {
+  $("#total-questions").text(totalQuestions);
+  $("#correct-answers").text(correctAnswers);
+  $("#incorrect-answers").text(incorrectAnswers);
+  $("#score").text(correctAnswers + "/" + totalQuestions);
+
+  var reviewHtml = ''; 
+ reviewHtml += '<h2 style="text-align:center">Correct Answers</h2>'
+  for (var i = 0; i < questions.length; i++) {
+    var questionData = questions[i];
+    var questionHtml = '<div class="review-question">';
+   
+    questionHtml += '<h3>Question ' + (i + 1) + ': ' + questionData.question + '</h3>';
+    questionHtml += '<div class="options">';
+    for (var j = 0; j < questionData.options.length; j++) {
+      var option = questionData.options[j];
+      questionHtml += '<input type="checkbox" name="q' + (i + 1) + '" value="' + j + `" ${questionData.correctAnswer.includes(j) ? "checked" : ""} disabled> ` + option + '<br>';
+    }
+    questionHtml += '</div>';
+    questionHtml += '</div>';
+
+    reviewHtml += questionHtml;
+  }
+
+  $("#results-page .review").html(reviewHtml);
+
+  $("#question-page").hide();
+  $("#results-page").show();
+}
+
+  $("#start-btn").click(function() {
+    var name = $("#name").val();
+    if (name !== "") {
+      $("#start-page").hide();
+      showQuestion();
+    } else {
+      alert("Please enter your name.");
+    }
+  });
+
+  $("#next-btn").click(function() {
+    var selectedOptions = $("input[name=q" + (currentQuestion + 1) + "]:checked").map(function() {
+      return $(this).val();
+    }).get();
+
+    var correctAnswer = questions[currentQuestion].correctAnswer;
+    var isAnswerCorrect = checkAnswers(selectedOptions, correctAnswer);
+
+    if (isAnswerCorrect) {
+        console.log("correct")
+      correctAnswers++;
+    } else {
+      incorrectAnswers++;
+    }
+
+    currentQuestion++;
+    if (currentQuestion < totalQuestions) {
+      showQuestion();
+    } else {
+      showResults();
+    }
+  });
+
+  $("#finish-btn").click(function() {
+  var selectedOptions = $("input[name=q" + (currentQuestion + 1) + "]:checked").map(function() {
+    return parseInt($(this).val());
+  }).get();
+
+  userAnswers[currentQuestion] = selectedOptions;
+
+  var correctAnswer = questions[currentQuestion].correctAnswer;
+  var isAnswerCorrect = checkAnswers(selectedOptions, correctAnswer);
+
+  if (isAnswerCorrect) {
+    correctAnswers++;
+  } else {
+    incorrectAnswers++;
+  }
+
+  showResults();
+  console.log("a")
+});
+
+  $("#restart-btn").click(function() {
+    currentQuestion = 0;
+    correctAnswers = 0;
+    incorrectAnswers = 0;
+    $("#results-page").hide();
+    $("#start-page").show();
+  });
+
+  function checkAnswers(selectedOptions, correctAnswer) {
+      console.log(selectedOptions)
+        console.log(correctAnswer)
+    if (selectedOptions.length != correctAnswer.length) {
+        console.log("length")
+      return false;
+    }
+
+    for (var i = 0; i < selectedOptions.length; i++) {
+        
+      if (!correctAnswer.includes(parseInt(selectedOptions[i]))) {
+        console.log("elem")
+        return false;
+    
+      }
+    }
+      
+    return true;
+  }
+});
+
+  </script>
+</body>
+</html>
